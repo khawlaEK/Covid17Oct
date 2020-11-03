@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+	
+	<title>Repartition des cas par region - Leaflet</title>
+
+	<link rel="stylesheet" href="leaflet.css" />
+	<script src="leaflet.js"></script>
+
+
+	<style>
+		#map {
+			width: 100%;
+			height: 750px;
+		}
+		.info {
+		    padding: 6px 8px;
+		    font: 14px/16px Arial, Helvetica, sans-serif;
+		    background: white;
+		    background: rgba(255,255,255,0.9);
+		    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+		    border-radius: 5px;
+		}
+		.info h6 {
+		    margin: 0 0 5px;
+		    color: #000;
+		}
+		.legend {
+            line-height: 18px;
+            color: #000;
+        }
+    
+        .legend i {
+         	width: 18px;
+        	height: 18px;
+        	float: left;
+        	margin-right: 8px;
+        	opacity: 0.7;
+        }
+	</style>
+
+	
+</head>
+<body>
+
+<div id='map'></div>
+
+<script src="regions.geojson" type="text/javascript"></script>
+
+<script type="text/javascript">
+
+	var map = L.map('map').setView([28.912030, -9.604092], 5);
+    L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.{ext}', {
+    	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', 
+    	subdomains: 'abcd',
+	    minZoom: 0,
+	    maxZoom: 20,
+	    ext: 'png'
+    }).addTo(map)
+/*var JusticeMap_multi = L.tileLayer('http://www.justicemap.org/tile/{size}/multi/{z}/{x}/{y}.png', {
+	attribution: '<a href="http://www.justicemap.org/terms.php">Justice Map</a>',
+	size: 'county',
+	bounds: [[14, -180], [72, -56]]
+});
+    /* L.tileLayer('http://{s}.tiles.wmflabs.org/bw-mapnik/{z}/{x}/{y}.png', {
+      	maxZoom: 18, attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map)
+*/
+
+	// get color depending on population density value
+	function getColor(casjournaliers) {
+		return casjournaliers > 760 ? '#a50f15' :
+		       casjournaliers > 485 ? '#de2d26' :
+		       casjournaliers > 210 ? '#fb6a4a' :
+		       casjournaliers > 75 ? '#fcae91' :
+                                     '#fee5d9';
+	}
+
+	function Monstyle(feature) {
+		return {
+			weight: 2,
+			opacity: 1,
+			color: 'black',
+			dashArray: '3',
+			fillOpacity: 0.9,
+			fillColor: getColor(feature.properties.covid_cas_)
+		};
+	}
+
+	function highlightFeature(e) {
+	    var layer = e.target;
+
+	    layer.setStyle({
+	        weight: 5,
+	        color: '#666',
+	        dashArray: '',
+	        fillOpacity: 0.7
+	    });
+
+	    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+	        layer.bringToFront();
+	    }
+	        info.update(layer.feature.properties);
+
+	}
+
+	function resetHighlight(e) {
+    	geojson.resetStyle(e.target);
+    	    info.update();
+
+	}
+	function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+}
+	function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+};
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [0, 75, 210, 485, 760];
+
+    div.innerHTML += '<h6>Legende :</h6>';
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<div style="background-color :' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? 'cas _ ' + grades[i + 1] + 'cas <br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+// method that we will use to update the control based on feature properties passed
+info.update = function (props) {
+    this._div.innerHTML = '<h4>Apercu sur la situation pandemique au Maroc le 07/10/2020 :</h4>' +  (props ?
+        'Region : <b>' + props.Nom_Region + '</b> <br />Nouveaux cas : ' + props.covid_cas_ + '</b> <br />Nouveaux deces : '+ props.covid_dece + '</b> <br />Total des cas : ' + props.covid_tota + ' ...</sup>'
+        : 'Merci de mettre le curseur sur une region.');
+};
+
+info.addTo(map);
+
+	var geojson = L.geoJson(mesregions, {
+		style: Monstyle,
+	    onEachFeature: onEachFeature,
+}).addTo(map);
+var graphicScale = L.control.graphicScale({fill:'fill',doubleLine:true}).addTo(map);
+     
+
+        // var overlayMaps = {
+        //     "geojson": geojson,
+        //  };
+
+        // //var control = L.control.layers(baseMaps, overlayMaps)
+        // var control = L.control.selectLayers(  overlayMaps)
+        // control.addTo(map);
+
+
+</script>
+
+</body>
+</html>
