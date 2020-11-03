@@ -134,7 +134,7 @@ legend.onAdd = function (map) {
     var div = L.DomUtil.create('div', 'info legend'),
         grades = [0, 75, 210, 485, 760];
 
-    div.innerHTML += '<h6>Legende :</h6>';
+    div.innerHTML += '<h6>Nouveaux cas journaliers :</h6>';
     for (var i = 0; i < grades.length; i++) {
         div.innerHTML +=
             '<div style="background-color :' + getColor(grades[i] + 1) + '"></i> ' +
